@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('learning_logs.urls')),#will look at url file in app and execute whats in there
+    path('users/', include('users.urls'))
 ]
