@@ -9,8 +9,11 @@
     {% for e in entries %}
 
     <li>
-        <p>{{ e.date_added }}</p>
-        <p>{{ e.text }}</p>
+        <p>{{ e.date_added|date:'M d, Y' }}</p>
+        <p>{{ e.text|linebreaks }}</p>
+        <p>
+            <a href="{% url 'learning_logs:edit_entry' e.id %}">Edit Entry</a>
+        </p>
     </li>
 
     {% empty %}

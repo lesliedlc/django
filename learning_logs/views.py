@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
-from .models import Topic #import from models.py file
+from .models import Topic, Entry #import from models.py file
 from .forms import TopicForm
 from .forms import EntryForm
 
 # Create your views here.
 # Defined as functions
+# 2
 
 def index(request):
     return render(request, 'learning_logs/index.html')
@@ -60,3 +61,18 @@ def new_entry(request, topic_id):
     
     context = {'form':form, 'topic':topic}
     return render(request, 'learning_logs/new_entry.html', context)
+
+def edit_entry(request, entry_id): #has to match the views.entry
+    entry = Entry.objects.get(id = entry_id)
+    topic = entry.topic #since it is an attribute of entry
+
+    if request.method != 'POST':
+        form = EntryForm(instance = entry)
+    else:
+        form = EntryForm(instance = entry, data = request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('learning_logs:topic', topic_id = topic.id)
+            
+    context = {'entry':entry, 'topic':topic, 'form':form} #is a dictionary that is used to pass information to the html
+    return render(request, 'learning_logs/edit_entry.html', context)
