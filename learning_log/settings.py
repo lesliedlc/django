@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     #my apps, add to include it in project
     'learning_logs',
     'users',
+    'bootstrap4', #thirdpartyapp
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
