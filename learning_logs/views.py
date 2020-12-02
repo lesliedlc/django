@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .models import Topic, Entry #import from models.py file
 from .forms import TopicForm
 from .forms import EntryForm
+from django.contrib.auth.decorators import login_required
+from django.http import Http404
 
 # Create your views here.
 # Defined as functions
@@ -10,15 +12,22 @@ from .forms import EntryForm
 def index(request):
     return render(request, 'learning_logs/index.html')
 
+
+@login_required
 def topics(request): #(2) get all topics
-    topics = Topic.objects.order_by('date_added')
+    topics = Topic.objects.filter(owner = request.user).order_by('date_added')
 
     context = {'topics':topics} #allows to use template variables
 
     return render(request, 'learning_logs/topics.html', context)
 
+@login_required
 def topic(request, topic_id): #integer made in url - get individual topic
     topic = Topic.objects.get(id = topic_id)
+
+    if topic.owner != request.user:
+        raise Http404
+
     entries = topic.entry_set.order_by('-date_added') # - is decending order
 
     context = {'topic': topic, 'entries': entries}
@@ -28,7 +37,7 @@ def topic(request, topic_id): #integer made in url - get individual topic
 #TWO TYPES REQUEST
 #GET - get data (loading up with empty fields, no info)
 #POST - post data (send info to DB)
-
+@login_required
 def new_topic(request):
     if request.method != 'POST':
         form = TopicForm()
@@ -36,7 +45,9 @@ def new_topic(request):
         form = TopicForm(data = request.POST) 
 
         if form.is_valid():#if the form is actually valid
-            form.save() #what view will use to take the info and save to DB
+            new_topic = form.save(commit=False) #what view will use to take the info and save to DB
+            new_topic.owner = request.user #specify who the user will be
+            new_topic.save()
 
             return redirect("learning_logs:topics")
 
@@ -44,8 +55,13 @@ def new_topic(request):
 
     return render(request, 'learning_logs/new_topic.html', context)
 
+@login_required
 def new_entry(request, topic_id):
     topic = Topic.objects.get(id = topic_id)
+    
+    if topic.owner != request.user:
+        raise Http404
+
     if request.method != 'POST':
         form = EntryForm()
     else:
@@ -62,9 +78,13 @@ def new_entry(request, topic_id):
     context = {'form':form, 'topic':topic}
     return render(request, 'learning_logs/new_entry.html', context)
 
+@login_required
 def edit_entry(request, entry_id): #has to match the views.entry
     entry = Entry.objects.get(id = entry_id)
     topic = entry.topic #since it is an attribute of entry
+
+    if topic.owner != request.user:
+        raise Http404
 
     if request.method != 'POST':
         form = EntryForm(instance = entry)
